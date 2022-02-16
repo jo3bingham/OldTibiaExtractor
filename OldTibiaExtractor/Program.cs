@@ -37,36 +37,30 @@ namespace OldTibiaExtractor
         {
             using (System.IO.BinaryReader reader = new System.IO.BinaryReader(System.IO.File.OpenRead("TIBIA.SPR"))) {
                 ushort count = reader.ReadUInt16();
-                reader.BaseStream.Seek(6, System.IO.SeekOrigin.Current);
+                reader.BaseStream.Seek(4, System.IO.SeekOrigin.Current);
 
-                for (int a = 1; a < count; a++) {
+                ushort id = 0;
+                while (id <= count) {
+                    id = reader.ReadUInt16();
+
                     Bitmap bmp = new Bitmap(32, 32, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
                     bmp.Palette = colorPalette;
                     System.Drawing.Imaging.BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, 32, 32), System.Drawing.Imaging.ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
-                    byte[] byteArray = new byte[1024];
 
+                    byte[] byteArray = new byte[1024];
                     for (int b = 0; b < 1024; b++) {
                         byteArray[b] = 0xFF;
                     }
 
                     long size = reader.ReadUInt16();
-                    size += reader.BaseStream.Position - 1;
+                    size += reader.BaseStream.Position - 2;
+
                     int i = 0;
-
-                    while (reader.BaseStream.Position <= size) {
-                        if (reader.BaseStream.Position >= reader.BaseStream.Length) {
-                            break;
-                        }
-
+                    while (reader.BaseStream.Position < size) {
                         ushort tPixels = reader.ReadUInt16();
                         i += tPixels;
 
-                        if (reader.BaseStream.Position > size) {
-                            break;
-                        }
-
                         byte cPixels = reader.ReadByte();
-
                         for (int c = 0; c < cPixels; c++) {
                             byte color = reader.ReadByte();
                             byteArray[i] = color;
@@ -82,7 +76,7 @@ namespace OldTibiaExtractor
                         System.IO.Directory.CreateDirectory(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(filename), "Sprites\\"));
                     }
 
-                    bmp.Save(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(filename), "Sprites\\" + a.ToString() + ".bmp"));
+                    bmp.Save(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(filename), "Sprites\\" + id.ToString() + ".bmp"));
                     bmp.Dispose();
                 }
             }
